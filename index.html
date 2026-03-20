@@ -87,7 +87,10 @@ canvas { display: block; }
       <div id="level-val">1</div>
       <div id="level-label">Level</div>
     </div>
-    <div id="lives-wrap"></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div id="lives-wrap"></div>
+      <button onclick="gameFullscreen()" id="fs-btn" style="background:rgba(245,166,35,0.15);border:1px solid rgba(245,166,35,0.4);color:#F5A623;font-size:10px;font-family:monospace;padding:4px 8px;border-radius:3px;cursor:pointer;letter-spacing:1px;">&#x26F6;</button>
+    </div>
   </div>
   <div id="scramble-overlay"></div>
   <div id="msg-display"></div>
@@ -257,8 +260,9 @@ const LEVEL_THEMES = [
 ];
 
 function getLevelTheme(){
-  const idx = Math.min(level, LEVEL_THEMES.length-1);
-  return LEVEL_THEMES[idx] || LEVEL_THEMES[LEVEL_THEMES.length-1];
+  const lv = level || 1;
+  const idx = Math.min(lv, LEVEL_THEMES.length-1);
+  return LEVEL_THEMES[idx] || LEVEL_THEMES[1];
 }
 
 function drawBG(){
@@ -960,8 +964,7 @@ function update(){
       dy = (sc?-1:1)*(tdy/td)*factor;
     } else {
       // Finger is on Oscar - full stop, no drift
-      player.vx = 0;
-      player.vy = 0;
+      if(player){ player.vx = 0; player.vy = 0; }
     }
   }
   const spd = 4.5 + level*0.15;
@@ -1216,7 +1219,7 @@ function loop(){
 // Idle background loop
 function idleLoop(){
   if(state==='playing') return;
-  if(corals) drawBG();
+  if(corals && W && H) drawBG();
   requestAnimationFrame(idleLoop);
 }
 
@@ -1264,6 +1267,35 @@ canvas.addEventListener('mousemove',e=>{
   touch.y=(e.clientY-r.top)*(H/r.height);
 });
 document.addEventListener('mouseup',()=>{ touch.active=false; });
+
+// -- FULLSCREEN --
+function gameFullscreen(){
+  var el = document.documentElement;
+  var btn = document.getElementById('fs-btn');
+  if(!document.fullscreenElement && !document.webkitFullscreenElement){
+    var req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if(req) req.call(el);
+    if(btn) btn.textContent = '⊿';
+  } else {
+    var exit = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if(exit) exit.call(document);
+    if(btn) btn.innerHTML = '&#x26F6;';
+  }
+}
+document.addEventListener('fullscreenchange', function(){
+  var btn = document.getElementById('fs-btn');
+  if(!btn) return;
+  if(!document.fullscreenElement && !document.webkitFullscreenElement){
+    btn.innerHTML = '&#x26F6;';
+  }
+});
+document.addEventListener('webkitfullscreenchange', function(){
+  var btn = document.getElementById('fs-btn');
+  if(!btn) return;
+  if(!document.webkitFullscreenElement){
+    btn.innerHTML = '&#x26F6;';
+  }
+});
 
 // -- BOOT --
 loadLB();
